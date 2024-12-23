@@ -200,10 +200,10 @@ def delete_product(id):
     product = db.session.get(Product, id)
     
     if not product:
-        return jsonify({"message": "Invalid user id"}), 400
+        return jsonify({"message": "Inver id"}), 400
     db.session.delete(product)
     db.session.commit()
-    return jsonify({"message": f"successfully deleted user {id}"}), 200
+    return jsonify({"message": f"succesdeleted user {id}"}), 200
 
 # Create Order
 @app.route('/orders', methods=['POST'])
