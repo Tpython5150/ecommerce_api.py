@@ -5,7 +5,7 @@ from marshmallow import ValidationError
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, relationship, Session
 from sqlalchemy import ForeignKey, Table, String, Column, select, DateTime, Float
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 
@@ -18,7 +18,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:Nissan5150@
 # #Creating our base model
 class Base(DeclarativeBase):
     pass
-db = SQLAlchemy(app, model_class=Base)
+db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 ma = Marshmallow(app)
 
@@ -28,8 +28,8 @@ ma = Marshmallow(app)
 order_product = Table(
     "order_product",
     Base.metadata,
-    Column("order_id", ForeignKey("order.id")),
-    Column("product_id", ForeignKey("product.id"))
+    Column("orders_id", ForeignKey("orders.id")),
+    Column("products_id", ForeignKey("products.id"))
 )
 
 
@@ -48,7 +48,7 @@ class Order(Base):
     __tablename__ = "orders"
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    order_date: Mapped[datetime] = mapped_column(DateTime.now(datetime.timezone.utc))
+    order_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
     
@@ -152,7 +152,7 @@ def delete_user(id):
     return jsonify({"message": f"successfully deleted user {id}"}), 200
 
 # Create Product
-@app.route('/products/<int:id', methods=['POST'])
+@app.route('/products/<int:id>', methods=['POST'])
 def create_product():
     try:
         product_data= product_schema.load(request.json)
@@ -200,10 +200,10 @@ def delete_product(id):
     product = db.session.get(Product, id)
     
     if not product:
-        return jsonify({"message": "Inver id"}), 400
+        return jsonify({"message": "Invalid id"}), 400
     db.session.delete(product)
     db.session.commit()
-    return jsonify({"message": f"succesdeleted user {id}"}), 200
+    return jsonify({"message": f"success deleted user {id}"}), 200
 
 # Create Order
 @app.route('/orders', methods=['POST'])
@@ -249,8 +249,13 @@ def delete_order(order_id):
 
 # Get all order
 @app.route('/orders/<int:order_id>/products', methods=['GET'])
-def get_products(order_id):
+def get_orders(order_id):
     order = db.session.get(Order, order_id)
     return jsonify(order.products), 200
     
+if __name__=="__main":
     
+    with app.app_context():
+        db.create_all()
+        
+    app.run(debug=True)    
